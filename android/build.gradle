@@ -1,5 +1,5 @@
 android {
-    buildToolsVersion "25.0.2"
+    buildToolsVersion = "$androidBuildVersionTools"
     compileSdkVersion 25
     sourceSets {
         main {
