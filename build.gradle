@@ -25,6 +25,7 @@ allprojects {
         box2DLightsVersion = '1.4'
         ashleyVersion = '1.7.0'
         aiVersion = '1.8.0'
+        vtmVersion = 'master-SNAPSHOT'
     }
 
     repositories {
@@ -43,6 +44,7 @@ project(":desktop") {
         compile project(":core")
         compile "com.badlogicgames.gdx:gdx-backend-lwjgl:$gdxVersion"
         compile "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+        compile 'com.metsci.ext.com.kitfox.svg:svg-salamander:0.1.19'
     }
 }
 
@@ -95,6 +97,7 @@ project(":core") {
 
     dependencies {
         compile "com.badlogicgames.gdx:gdx:$gdxVersion"
+        compile "org.mapsforge:vtm:$vtmVersion"
     }
 }
 
