@@ -86,7 +86,7 @@ project(":core") {
 
     dependencies {
         compile "com.badlogicgames.gdx:gdx:$gdxVersion"
-        compile 'org.slf4j:slf4j-api:1.7.21'
+        compile "org.mapsforge:vtm:$vtmVersion"
     }
 }
 
