@@ -19,7 +19,7 @@ public class MyGdxGame extends ApplicationAdapter {
         batch = new SpriteBatch();
         img = new Texture("badlogic.jpg");
 
-        FileHandle svgFile = Gdx.files.internal("powered_by_libgdx.svg");
+        FileHandle svgFile = Gdx.files.internal("powered_by_libGDX.svg");
         Bitmap bitmap = CanvasAdapter.decodeSvgBitmap(svgFile.read(), 0, 0, 1000);
 
         byte[] bitmapData = bitmap.getPngEncodedData();
