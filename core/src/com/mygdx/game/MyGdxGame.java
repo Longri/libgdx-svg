@@ -19,12 +19,16 @@ public class MyGdxGame extends ApplicationAdapter {
         batch = new SpriteBatch();
         img = new Texture("badlogic.jpg");
 
-        FileHandle svgFile = Gdx.files.internal("powered_by_libGDX.svg");
-        Bitmap bitmap = CanvasAdapter.decodeSvgBitmap(svgFile.read(), 0, 0, 1000);
+        try {
+            FileHandle svgFile = Gdx.files.internal("powered_by_libGDX.svg");
+            Bitmap bitmap = CanvasAdapter.decodeSvgBitmap(svgFile.read(), 0, 0, 1000);
 
-        byte[] bitmapData = bitmap.getPngEncodedData();
-        Pixmap pixmap = new Pixmap(bitmapData, 0, bitmapData.length);
-        svg = new Texture(pixmap);
+            byte[] bitmapData = bitmap.getPngEncodedData();
+            Pixmap pixmap = new Pixmap(bitmapData, 0, bitmapData.length);
+            svg = new Texture(pixmap);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -33,7 +37,7 @@ public class MyGdxGame extends ApplicationAdapter {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         batch.begin();
         batch.draw(img, 0, 0);
-        batch.draw(svg, 0, 300);
+        if (svg != null) batch.draw(svg, 0, 300);
         batch.end();
     }
 
