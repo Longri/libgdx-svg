@@ -16,18 +16,28 @@
  */
 package org.oscim.ios_moe.backend;
 
-import apple.coregraphics.opaque.CGContextRef;
+import apple.coregraphics.struct.CGPoint;
+import apple.coregraphics.struct.CGRect;
+import apple.coregraphics.struct.CGSize;
+import apple.uikit.c.UIKit;
 import org.oscim.backend.canvas.Bitmap;
 import org.oscim.backend.canvas.Canvas;
 import org.oscim.backend.canvas.Paint;
+
+import static apple.coregraphics.c.CoreGraphics.CGContextFillRect;
+import static apple.coregraphics.c.CoreGraphics.CGContextSetFillColorWithColor;
+import static org.oscim.ios_moe.backend.IosBitmap.getCGColor;
 
 /**
  * iOS specific implementation of {@link Canvas}.
  */
 public class IosCanvas implements Canvas {
+
+    IosBitmap bmp;
+
     @Override
     public void setBitmap(Bitmap bitmap) {
-
+        this.bmp = ((IosBitmap) bitmap);
     }
 
     @Override
@@ -62,18 +72,25 @@ public class IosCanvas implements Canvas {
 
     @Override
     public void fillColor(int color) {
-
+        bmp.createContext();
+        CGSize size = new CGSize(bmp.width, bmp.height);
+        CGContextSetFillColorWithColor(bmp.cgBitmapContext, getCGColor(color));
+        CGRect rect = new CGRect(new CGPoint(0, 0), size);
+        CGContextFillRect(bmp.cgBitmapContext, rect);
+        bmp.image = UIKit.UIGraphicsGetImageFromCurrentImageContext();
+        bmp.createImageFromContext();
     }
 
     @Override
     public int getHeight() {
-        return 0;
+        return this.bmp != null ?  this.bmp.getHeight() : 0;
     }
 
     @Override
     public int getWidth() {
-        return 0;
+        return this.bmp != null ? this.bmp.getWidth() : 0;
     }
+
 //
 //    static void setFillColor(CGContextRef bctx, int color) {
 //        float blue = (color & 0xFF) / 255f;

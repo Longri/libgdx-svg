@@ -16,16 +16,28 @@ package org.oscim.ios_moe.backend;
 
 import apple.coregraphics.c.CoreGraphics;
 import apple.coregraphics.enums.CGImageAlphaInfo;
+import apple.coregraphics.opaque.CGColorRef;
 import apple.coregraphics.opaque.CGColorSpaceRef;
 import apple.coregraphics.opaque.CGContextRef;
+import apple.coregraphics.opaque.CGImageRef;
+import apple.coregraphics.struct.CGPoint;
+import apple.coregraphics.struct.CGRect;
+import apple.coregraphics.struct.CGSize;
 import apple.foundation.NSData;
+import apple.uikit.UIColor;
+import apple.uikit.UIGraphicsImageRendererContext;
 import apple.uikit.UIImage;
 import apple.uikit.c.UIKit;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.utils.BufferUtils;
 import org.moe.natj.general.ptr.BytePtr;
 import org.moe.natj.general.ptr.VoidPtr;
 import org.moe.natj.general.ptr.impl.PtrFactory;
+import org.oscim.backend.AssetAdapter;
+import org.oscim.backend.GL;
 import org.oscim.backend.canvas.Bitmap;
+import org.oscim.backend.canvas.Color;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,8 +45,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.Buffer;
+import java.nio.ByteBuffer;
 
-import static apple.coregraphics.c.CoreGraphics.CGColorSpaceCreateDeviceRGB;
+import static apple.coregraphics.c.CoreGraphics.*;
 
 /**
  * iOS specific implementation of {@link Bitmap}.
@@ -49,7 +62,7 @@ public class IosBitmap implements Bitmap {
     private int glFormat = Integer.MIN_VALUE;
     private int glType = Integer.MIN_VALUE;
     private Buffer directPixelBuffer;
-    private final UIImage image;
+    UIImage image;
 
     /**
      * Constructor<br>
@@ -66,7 +79,7 @@ public class IosBitmap implements Bitmap {
         CGColorSpaceRef rgbColorSpace = CGColorSpaceCreateDeviceRGB();
         this.cgBitmapContext = CoreGraphics.CGBitmapContextCreate(null, width, height, 8, 4 * width,
                 rgbColorSpace, CGImageAlphaInfo.PremultipliedLast);
-        this.image = null;
+        this.image = UIImage.imageWithCGImage(CGBitmapContextCreateImage(this.cgBitmapContext));
     }
 
     /**
@@ -77,16 +90,12 @@ public class IosBitmap implements Bitmap {
      * @throws IOException
      */
     public IosBitmap(InputStream inputStream) throws IOException {
-//        NSData data = new NSData(toByteArray(inputStream));
-//        CGImage image = new UIImage(data).getCGImage();
-//        this.width = (int) image.getWidth();
-//        this.height = (int) image.getHeight();
-//        this.cgBitmapContext = CGBitmapContext.create(width, height, 8, 4 * width,
-//                CGColorSpace.createDeviceRGB(), CGImageAlphaInfo.PremultipliedLast);
-//
-//        this.cgBitmapContext.drawImage(new CGRect(0, 0, width, height), image);
-//        image.dispose();
-        this.image = null;
+        byte[] array = toByteArray(inputStream);
+        BytePtr ptr = PtrFactory.newByteArray(array);
+        NSData data = NSData.dataWithBytesLength(ptr, array.length);
+        this.image = UIImage.imageWithData(data);
+        this.width = (int) this.image.size().width();
+        this.height = (int) this.image.size().height();
     }
 
     /**
@@ -97,34 +106,31 @@ public class IosBitmap implements Bitmap {
      * @throws IOException
      */
     public IosBitmap(String fileName) throws IOException {
-//        if (fileName == null || fileName.length() == 0) {
-//            // no image source defined
-//            this.cgBitmapContext = null;
-//            this.width = 0;
-//            this.height = 0;
-//            return;
-//        }
-//
-//        InputStream inputStream = AssetAdapter.readFileAsStream(fileName);
-//        if (inputStream == null) {
-//            log.error("invalid bitmap source: " + fileName);
-//            // no image source defined
-//            this.cgBitmapContext = null;
-//            this.width = 0;
-//            this.height = 0;
-//            return;
-//        }
-//
-//        NSData data = new NSData(toByteArray(inputStream));
-//        CGImage image = new UIImage(data).getCGImage();
-//        this.width = (int) image.getWidth();
-//        this.height = (int) image.getHeight();
-//        this.cgBitmapContext = CGBitmapContext.create(width, height, 8, 4 * width,
-//                CGColorSpace.createDeviceRGB(), CGImageAlphaInfo.PremultipliedLast);
-//
-//        this.cgBitmapContext.drawImage(new CGRect(0, 0, width, height), image);
-//        image.dispose();
-        this.image = null;
+        if (fileName == null || fileName.length() == 0) {
+            // no image source defined
+            this.cgBitmapContext = null;
+            this.width = 0;
+            this.height = 0;
+            this.image = null;
+            return;
+        }
+
+        InputStream inputStream = AssetAdapter.readFileAsStream(fileName);
+        if (inputStream == null) {
+            log.error("invalid bitmap source: " + fileName);
+            // no image source defined
+            this.cgBitmapContext = null;
+            this.width = 0;
+            this.height = 0;
+            this.image = null;
+            return;
+        }
+        byte[] array = toByteArray(inputStream);
+        BytePtr ptr = PtrFactory.newByteArray(array);
+        NSData data = NSData.dataWithBytesLength(ptr, array.length);
+        this.image = UIImage.imageWithData(data);
+        this.width = (int) this.image.size().width();
+        this.height = (int) this.image.size().height();
     }
 
     /**
@@ -166,42 +172,57 @@ public class IosBitmap implements Bitmap {
         return new int[0];
     }
 
+
+    public void createContext() {
+        if (this.cgBitmapContext == null) {
+            CGSize size = new CGSize(this.width, this.height);
+            UIKit.UIGraphicsBeginImageContext(size);
+            this.cgBitmapContext = UIKit.UIGraphicsGetCurrentContext();
+//            UIKit.UIGraphicsEndImageContext();
+        }
+    }
+
+
     @Override
     public void eraseColor(int color) {
+        createContext();
 
         //delete all pixels and fill with given color
+        CGSize size = new CGSize(this.width, this.height);
+        CGContextSetFillColorWithColor(this.cgBitmapContext, getCGColor(color));
+        CGRect rect = new CGRect(new CGPoint(0, 0), size);
 
-//        CGRect rect = new CGRect(0, 0, this.width, this.height);
-//        this.cgBitmapContext.setFillColor(getCGColor(color));
-//        this.cgBitmapContext.setBlendMode(CGBlendMode.Clear);
-//        this.cgBitmapContext.fillRect(rect);
-//        this.cgBitmapContext.setBlendMode(CGBlendMode.Normal);
-//        this.cgBitmapContext.fillRect(rect);
+        CGContextFillRect(this.cgBitmapContext, rect);
+        createImageFromContext();
+    }
+
+    public void createImageFromContext() {
+        CGImageRef ref = CGBitmapContextCreateImage(this.cgBitmapContext);
+        this.image = UIImage.imageWithCGImage(ref);
+//        this.image = UIKit.UIGraphicsGetImageFromCurrentImageContext();
     }
 
     @Override
     public void uploadToTexture(boolean replace) {
 
-//        //create a pixel buffer for upload from direct memory pointer
-//        if (directPixelBuffer == null) {
-//
-//            //create Pixmap from cgBitmapContext for extract glFormat info's
-//            UIImage uiImage = new UIImage(cgBitmapContext.toImage());
-//            NSData data = uiImage.toPNGData();
-//            byte[] encodedData = data.getBytes();
-//            Pixmap pixmap = new Pixmap(encodedData, 0, encodedData.length);
-//
-//            glInternalFormat = pixmap.getGLInternalFormat();
-//            glFormat = pixmap.getGLFormat();
-//            glType = pixmap.getGLType();
-//
+        //create a pixel buffer for upload from direct memory pointer
+        if (directPixelBuffer == null) {
+
+            //create Pixmap from cgBitmapContext for extract glFormat info's
+            byte[] encodedData = getPngEncodedData();
+            Pixmap pixmap = new Pixmap(encodedData, 0, encodedData.length);
+
+            glInternalFormat = pixmap.getGLInternalFormat();
+            glFormat = pixmap.getGLFormat();
+            glType = pixmap.getGLType();
+
 //            directPixelBuffer = cgBitmapContext.getData().asIntBuffer(encodedData.length / 4);
-//            pixmap.dispose();
-//
-//        }
-//
-//        Gdx.gl.glTexImage2D(GL.TEXTURE_2D, 0, glInternalFormat, this.width, this.height, 0
-//                , glFormat, glType, directPixelBuffer);
+            pixmap.dispose();
+
+        }
+
+        Gdx.gl.glTexImage2D(GL.TEXTURE_2D, 0, glInternalFormat, this.width, this.height, 0
+                , glFormat, glType, directPixelBuffer);
     }
 
     @Override
@@ -226,35 +247,32 @@ public class IosBitmap implements Bitmap {
         return out.toByteArray();
     }
 
-//    /**
-//     * Returns the CGColor from given int
-//     *
-//     * @param color
-//     * @return
-//     */
-//    static CGColor getCGColor(int color) {
-//        return UIColor.fromRGBA(
-//                Color.a(color),
-//                Color.g(color),
-//                Color.b(color),
-//                Color.r(color))
-//                .getCGColor();
-//    }
+    /**
+     * Returns the CGColor from given int
+     *
+     * @param color
+     * @return
+     */
+    static CGColorRef getCGColor(int color) {
+
+        return UIColor.colorWithRedGreenBlueAlpha(
+                Color.r(color) / 255.0,
+                Color.g(color) / 255.0,
+                Color.b(color) / 255.0,
+                Color.a(color) / 255.0
+        ).CGColor();
+    }
 
     @Override
     public byte[] getPngEncodedData() {
-//        UIImage uiImage = new UIImage(cgBitmapContext.toImage());
         NSData data = UIKit.UIImagePNGRepresentation(this.image);
         long arrayLength = data.length();
-        Buffer buffer = BufferUtils.newByteBuffer((int) arrayLength);
-
-//        VoidPtr ptr = PtrFactory.newPtr(buffer);
-//        data.getBytesLength(ptr, arrayLength);
-
-        byte[] array = new byte[(int) arrayLength];
-        BytePtr ptr = PtrFactory.newByteArray(array);
+        ByteBuffer buffer = BufferUtils.newByteBuffer((int) arrayLength);
+        VoidPtr ptr = PtrFactory.newPtr(buffer);
         data.getBytesLength(ptr, arrayLength);
-
+        int length = (int) arrayLength - 4;
+        byte[] array = new byte[length];
+        System.arraycopy(buffer.array(), 4, array, 0, length);
         return array;
     }
 }
