@@ -247,6 +247,15 @@ public class IosBitmap implements Bitmap {
     public byte[] getPngEncodedData() {
         UIImage uiImage = new UIImage(cgBitmapContext.toImage());
         NSData data = uiImage.toPNGData();
+
+
+        byte[] array = data.getBytes();
+
+        for (int i = 0; i < 20; i++) {
+            Gdx.app.log("", Byte.toString(array[i]));
+        }
+
+
         return data.getBytes();
     }
 }

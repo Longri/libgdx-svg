@@ -22,6 +22,8 @@
 	<true/>
 	<key>MOE.Main.Class</key>
 	<string>com.mygdx.game.IOSMoeLauncher</string>
+	<key>MinimumOSVersion</key>
+	<string>8.0</string>
 	<key>UIApplicationExitsOnSuspend</key>
 	<false/>
 	<key>UIRequiredDeviceCapabilities</key>
@@ -29,7 +31,9 @@
 		<string>armv7</string>
 	</array>
 	<key>UIRequiresFullScreen</key>
-	<true/>
+	<false/>
+	<key>UIStatusBarStyle</key>
+	<string>UIStatusBarStyleLightContent</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

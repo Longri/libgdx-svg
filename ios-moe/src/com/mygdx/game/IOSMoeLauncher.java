@@ -6,6 +6,7 @@ import org.moe.natj.general.Pointer;
 import com.mygdx.game.MyGdxGame;
 
 import apple.uikit.c.UIKit;
+import org.oscim.ios_moe.backend.IosGraphics;
 
 public class IOSMoeLauncher extends IOSApplication.Delegate {
 
@@ -17,6 +18,9 @@ public class IOSMoeLauncher extends IOSApplication.Delegate {
     protected IOSApplication createApplication() {
         IOSApplicationConfiguration config = new IOSApplicationConfiguration();
         config.useAccelerometer = false;
+
+        IosGraphics.init();
+
         return new IOSApplication(new MyGdxGame(), config);
     }
 
