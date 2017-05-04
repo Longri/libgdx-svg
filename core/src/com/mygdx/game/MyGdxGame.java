@@ -11,12 +11,13 @@ import org.oscim.backend.CanvasAdapter;
 import org.oscim.backend.canvas.Bitmap;
 import org.oscim.backend.canvas.Canvas;
 import org.oscim.backend.canvas.Color;
+import org.oscim.backend.canvas.Paint;
 
 import java.io.InputStream;
 
 public class MyGdxGame extends ApplicationAdapter {
     SpriteBatch batch;
-    Texture img, svg, png, pngfile;
+    Texture img, svg, png, draw;
     Bitmap cbBitmap;
 
     @Override
@@ -51,6 +52,28 @@ public class MyGdxGame extends ApplicationAdapter {
             e.printStackTrace();
         }
 
+        try {
+            Bitmap bmp = CanvasAdapter.newBitmap(200, 200, 0);
+
+            Canvas canvas = CanvasAdapter.newCanvas();
+            canvas.setBitmap(bmp);
+            canvas.fillColor(Color.BLACK);
+            canvas.drawBitmap(cbBitmap, 10, 20);
+
+
+            Paint paint = CanvasAdapter.newPaint();
+            paint.setColor(Color.GREEN);
+            paint.setStrokeWidth(30);
+            paint.setStrokeCap(Paint.Cap.ROUND);
+            canvas.drawLine(10, 10, 50, 50, paint);
+
+            byte[] bitmapData = bmp.getPngEncodedData();
+            Pixmap pixmap = new Pixmap(bitmapData, 0, bitmapData.length);
+            draw = new Texture(pixmap);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     int renderCount = 0;
@@ -66,6 +89,8 @@ public class MyGdxGame extends ApplicationAdapter {
         batch.draw(img, 0, 0);
         if (svg != null) batch.draw(svg, 0, 300);
         if (png != null) batch.draw(png, 300, 0);
+        if (draw != null) batch.draw(draw, 300, 100);
+
 
         if (renderCount == 100) {
             cbBitmap.eraseColor(Color.GREEN);

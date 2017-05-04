@@ -32,45 +32,45 @@ import java.util.HashMap;
  */
 public class IosPaint implements Paint {
 
-//    private static CGLineCap getLineCap(Cap cap) {
-//        switch (cap) {
-//            case BUTT:
-//                return CGLineCap.Butt;
-//            case ROUND:
-//                return CGLineCap.Round;
-//            case SQUARE:
-//                return CGLineCap.Square;
-//        }
-//        return CGLineCap.Butt;
-//    }
-//
-//    private static CGLineJoin getLineJoin(Join join) {
-//        switch (join) {
-//            case MITER:
-//                return CGLineJoin.Miter;
-//            case ROUND:
-//                return CGLineJoin.Round;
-//            case BEVEL:
-//                return CGLineJoin.Bevel;
-//        }
-//        return CGLineJoin.Miter;
-//    }
+    private static int getLineCap(Cap cap) {
+        switch (cap) {
+            case BUTT:
+                return CGLineCap.Butt;
+            case ROUND:
+                return CGLineCap.Round;
+            case SQUARE:
+                return CGLineCap.Square;
+        }
+        return CGLineCap.Butt;
+    }
+
+    private static int getLineJoin(Join join) {
+        switch (join) {
+            case MITER:
+                return CGLineJoin.Miter;
+            case ROUND:
+                return CGLineJoin.Round;
+            case BEVEL:
+                return CGLineJoin.Bevel;
+        }
+        return CGLineJoin.Miter;
+    }
 
 //    private static final String DEFAULT_FONT_NAME = UIFont.getSystemFont(1, UIFontWeight.Semibold).getFontDescriptor().getPostscriptName();
 //    private static final String DEFAULT_FONT_NAME_BOLD = UIFont.getSystemFont(1, UIFontWeight.Bold).getFontDescriptor().getPostscriptName();
 //    private static final String DEFAULT_FONT_NAME_ITALIC = UIFont.getItalicSystemFont(1).getFontDescriptor().getPostscriptName();
 
     private Align align;
-//    private final NSAttributedStringAttributes attribs = new NSAttributedStringAttributes();
-//    private CGLineCap cap = CGLineCap.Butt;
-//    private CGLineJoin join = CGLineJoin.Miter;
+    //    private final NSAttributedStringAttributes attribs = new NSAttributedStringAttributes();
+    private int cap = CGLineCap.Butt;
+    private int join = CGLineJoin.Miter;
     private Style style;
     private float textSize;
     private FontFamily fontFamily;
     private FontStyle fontStyle;
     private int colorInt;
     private int strokeColorInt;
-//    private CTLine ctLine;
+    //    private CTLine ctLine;
     private boolean ctLineIsDirty = true;
     private String lastText = "";
     private float descent;
@@ -112,24 +112,24 @@ public class IosPaint implements Paint {
         return null;
     }
 
-    public CGLineCap getIosStrokeCap() {
-//        return this.cap;
-        return null;
+    public int getIosStrokeCap() {
+        return this.cap;
+//        return null;
     }
 
     @Override
     public void setStrokeCap(Cap cap) {
-//        this.cap = getLineCap(cap);
+        this.cap = getLineCap(cap);
     }
 
-    public CGLineJoin getIosStrokeJoin() {
-//        return this.join;
-        return null;
+    public int getIosStrokeJoin() {
+        return this.join;
+//        return null;
     }
 
     @Override
     public void setStrokeJoin(Join join) {
-//        this.join = getLineJoin(join);
+        this.join = getLineJoin(join);
     }
 
     @Override

@@ -16,6 +16,7 @@
  */
 package org.oscim.ios_moe.backend;
 
+import apple.coregraphics.opaque.CGContextRef;
 import apple.coregraphics.struct.CGPoint;
 import apple.coregraphics.struct.CGRect;
 import apple.coregraphics.struct.CGSize;
@@ -24,8 +25,7 @@ import org.oscim.backend.canvas.Bitmap;
 import org.oscim.backend.canvas.Canvas;
 import org.oscim.backend.canvas.Paint;
 
-import static apple.coregraphics.c.CoreGraphics.CGContextFillRect;
-import static apple.coregraphics.c.CoreGraphics.CGContextSetFillColorWithColor;
+import static apple.coregraphics.c.CoreGraphics.*;
 import static org.oscim.ios_moe.backend.IosBitmap.getCGColor;
 
 /**
@@ -52,7 +52,19 @@ public class IosCanvas implements Canvas {
 
     @Override
     public void drawBitmap(Bitmap bitmap, float x, float y) {
+        bmp.createContext();
+        CGContextSaveGState(bmp.cgBitmapContext);
 
+        IosBitmap iosBitmap = ((IosBitmap) bitmap);
+        float flipY = bmp.height - y - iosBitmap.height;
+
+        CGContextTranslateCTM(bmp.cgBitmapContext, x, flipY);
+
+
+        CGRect rect = new CGRect(new CGPoint(0, 0), new CGSize(iosBitmap.width, iosBitmap.height));
+        CGContextDrawImage(bmp.cgBitmapContext, rect, iosBitmap.image.CGImage());
+        CGContextRestoreGState(bmp.cgBitmapContext);
+        bmp.createImageFromContext();
     }
 
     @Override
@@ -67,7 +79,24 @@ public class IosCanvas implements Canvas {
 
     @Override
     public void drawLine(float x1, float y1, float x2, float y2, Paint paint) {
+        bmp.createContext();
 
+        //flip Y-axis
+        y1 = (int) (this.bmp.getHeight() - y1);
+        y2 = (int) (this.bmp.getHeight() - y2);
+
+        // set Stroke properties
+        CGContextSetLineWidth(bmp.cgBitmapContext, ((IosPaint) paint).strokeWidth);
+        CGContextSetLineCap(bmp.cgBitmapContext, ((IosPaint) paint).getIosStrokeCap());
+        CGContextSetLineJoin(bmp.cgBitmapContext, ((IosPaint) paint).getIosStrokeJoin());
+        setStrokeColor(bmp.cgBitmapContext, (paint.getColor()));
+
+        //draw line
+        CGContextBeginPath(bmp.cgBitmapContext);
+        CGContextMoveToPoint(bmp.cgBitmapContext, x1, y1);
+        CGContextAddLineToPoint(bmp.cgBitmapContext, x2, y2);
+        CGContextStrokePath(bmp.cgBitmapContext);
+        bmp.createImageFromContext();
     }
 
     @Override
@@ -77,13 +106,13 @@ public class IosCanvas implements Canvas {
         CGContextSetFillColorWithColor(bmp.cgBitmapContext, getCGColor(color));
         CGRect rect = new CGRect(new CGPoint(0, 0), size);
         CGContextFillRect(bmp.cgBitmapContext, rect);
-        bmp.image = UIKit.UIGraphicsGetImageFromCurrentImageContext();
+//        bmp.image = UIKit.UIGraphicsGetImageFromCurrentImageContext();
         bmp.createImageFromContext();
     }
 
     @Override
     public int getHeight() {
-        return this.bmp != null ?  this.bmp.getHeight() : 0;
+        return this.bmp != null ? this.bmp.getHeight() : 0;
     }
 
     @Override
@@ -91,28 +120,29 @@ public class IosCanvas implements Canvas {
         return this.bmp != null ? this.bmp.getWidth() : 0;
     }
 
-//
-//    static void setFillColor(CGContextRef bctx, int color) {
-//        float blue = (color & 0xFF) / 255f;
-//        color >>= 8;
-//        float green = (color & 0xFF) / 255f;
-//        color >>= 8;
-//        float red = (color & 0xFF) / 255f;
-//        color >>= 8;
-//        float alpha = (color & 0xFF) / 255f;
-//        bctx.setRGBFillColor(red, green, blue, alpha);
-//    }
-//
-//    static void setStrokeColor(CGContextRef bctx, int color) {
-//        float blue = (color & 0xFF) / 255f;
-//        color >>= 8;
-//        float green = (color & 0xFF) / 255f;
-//        color >>= 8;
-//        float red = (color & 0xFF) / 255f;
-//        color >>= 8;
-//        float alpha = (color & 0xFF) / 255f;
-//        bctx.setRGBStrokeColor(red, green, blue, alpha);
-//    }
+    //
+    static void setFillColor(CGContextRef bctx, int color) {
+        float blue = (color & 0xFF) / 255f;
+        color >>= 8;
+        float green = (color & 0xFF) / 255f;
+        color >>= 8;
+        float red = (color & 0xFF) / 255f;
+        color >>= 8;
+        float alpha = (color & 0xFF) / 255f;
+        CGContextSetRGBFillColor(bctx, red, green, blue, alpha);
+
+    }
+
+    static void setStrokeColor(CGContextRef bctx, int color) {
+        float blue = (color & 0xFF) / 255f;
+        color >>= 8;
+        float green = (color & 0xFF) / 255f;
+        color >>= 8;
+        float red = (color & 0xFF) / 255f;
+        color >>= 8;
+        float alpha = (color & 0xFF) / 255f;
+        CGContextSetRGBStrokeColor(bctx, red, green, blue, alpha);
+    }
 //
 //    CGContextRef cgBitmapContext;
 //
@@ -149,11 +179,7 @@ public class IosCanvas implements Canvas {
 //
 //    @Override
 //    public void drawBitmap(Bitmap bitmap, float x, float y) {
-//        this.cgBitmapContext.saveGState();
-//        this.cgBitmapContext.translateCTM(x, y);
-//        this.cgBitmapContext.drawImage(new CGRect(0, 0, bitmap.getWidth(), bitmap.getHeight()),
-//                ((IosBitmap) bitmap).cgBitmapContext.toImage());
-//        this.cgBitmapContext.restoreGState();
+//
 //    }
 //
 //    @Override
