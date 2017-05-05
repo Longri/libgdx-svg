@@ -57,7 +57,7 @@ public class MyGdxGame extends ApplicationAdapter {
 
             Canvas canvas = CanvasAdapter.newCanvas();
             canvas.setBitmap(bmp);
-            canvas.fillColor(Color.BLACK);
+            canvas.fillColor(Color.YELLOW);
             canvas.drawBitmap(cbBitmap, 10, 20);
 
 
@@ -66,6 +66,32 @@ public class MyGdxGame extends ApplicationAdapter {
             paint.setStrokeWidth(30);
             paint.setStrokeCap(Paint.Cap.ROUND);
             canvas.drawLine(10, 10, 50, 50, paint);
+
+
+            Paint circlePaint = CanvasAdapter.newPaint();
+            circlePaint.setStrokeWidth(7);
+            circlePaint.setColor(Color.RED);
+            circlePaint.setStyle(Paint.Style.FILL);
+            canvas.drawCircle(150, 150, 50, circlePaint);
+            circlePaint.setColor(Color.CYAN);
+            circlePaint.setStyle(Paint.Style.STROKE);
+            canvas.drawCircle(150, 150, 25, circlePaint);
+
+
+            Paint textPaint = CanvasAdapter.newPaint();
+            textPaint.setColor(Color.BLUE);
+            textPaint.setTypeface(Paint.FontFamily.DEFAULT, Paint.FontStyle.ITALIC);
+            textPaint.setTextSize(16);
+
+            canvas.drawText("HALLO LibGdx", 10, 100, textPaint);
+
+            Paint textPaintFill = CanvasAdapter.newPaint();
+            textPaintFill.setColor(Color.YELLOW);
+            textPaintFill.setTypeface(Paint.FontFamily.DEFAULT, Paint.FontStyle.ITALIC);
+            textPaintFill.setTextSize(12);
+            textPaint.setTextSize(12);
+            textPaint.setStrokeWidth(5);
+            canvas.drawText("HALLO LibGdx", 10, 150, textPaintFill, textPaint);
 
             byte[] bitmapData = bmp.getPngEncodedData();
             Pixmap pixmap = new Pixmap(bitmapData, 0, bitmapData.length);

@@ -42,25 +42,39 @@ public class IosCanvas implements Canvas {
 
     @Override
     public void drawText(String string, float x, float y, Paint paint) {
+        bmp.createContext();
+        //flip Y-axis
+        y = bmp.height - y;
 
+        IosPaint iosPaint = (IosPaint) paint;
+        iosPaint.drawLine(bmp.cgBitmapContext, string, x, y);
+        bmp.createImageFromContext();
     }
 
     @Override
     public void drawText(String string, float x, float y, Paint fill, Paint stroke) {
+        bmp.createContext();
+        //flip Y-axis
+        y = bmp.height - y;
 
+        IosPaint iosFill = (IosPaint) fill;
+        if (stroke != null) {
+            IosPaint iosStroke = (IosPaint) stroke;
+            iosFill.setStrokeWidth(iosStroke.strokeWidth);
+            iosFill.setStrokeColor(iosStroke.getColor());
+            iosStroke.drawLine(bmp.cgBitmapContext, string, x, y);
+        }
+        iosFill.drawLine(bmp.cgBitmapContext, string, x, y);
+        bmp.createImageFromContext();
     }
 
     @Override
     public void drawBitmap(Bitmap bitmap, float x, float y) {
         bmp.createContext();
         CGContextSaveGState(bmp.cgBitmapContext);
-
         IosBitmap iosBitmap = ((IosBitmap) bitmap);
         float flipY = bmp.height - y - iosBitmap.height;
-
         CGContextTranslateCTM(bmp.cgBitmapContext, x, flipY);
-
-
         CGRect rect = new CGRect(new CGPoint(0, 0), new CGSize(iosBitmap.width, iosBitmap.height));
         CGContextDrawImage(bmp.cgBitmapContext, rect, iosBitmap.image.CGImage());
         CGContextRestoreGState(bmp.cgBitmapContext);
@@ -69,12 +83,36 @@ public class IosCanvas implements Canvas {
 
     @Override
     public void drawBitmapScaled(Bitmap bitmap) {
-
+        bmp.createContext();
+        CGContextSaveGState(bmp.cgBitmapContext);
+        CGRect rect = new CGRect(new CGPoint(0, 0), new CGSize(bmp.width, bmp.height));
+        CGContextTranslateCTM(bmp.cgBitmapContext, 0, 0);
+        IosBitmap iosBitmap = ((IosBitmap) bitmap);
+        CGContextDrawImage(bmp.cgBitmapContext, rect, iosBitmap.image.CGImage());
+        CGContextRestoreGState(bmp.cgBitmapContext);
+        bmp.createImageFromContext();
     }
 
     @Override
     public void drawCircle(float x, float y, float radius, Paint paint) {
-
+        bmp.createContext();
+        float flipY = bmp.height - y - (radius * 2);
+        CGRect rect = new CGRect(new CGPoint(x-radius, flipY+radius), new CGSize(radius * 2, radius * 2));
+        switch (paint.getStyle()) {
+            case FILL:
+                setFillColor(bmp.cgBitmapContext, paint.getColor());
+                CGContextFillEllipseInRect(bmp.cgBitmapContext, rect);
+                break;
+            case STROKE:
+                // set Stroke properties
+                CGContextSetLineWidth(bmp.cgBitmapContext, ((IosPaint) paint).strokeWidth);
+                CGContextSetLineCap(bmp.cgBitmapContext, ((IosPaint) paint).getIosStrokeCap());
+                CGContextSetLineJoin(bmp.cgBitmapContext, ((IosPaint) paint).getIosStrokeJoin());
+                setStrokeColor(bmp.cgBitmapContext, (paint.getColor()));
+                CGContextStrokeEllipseInRect(bmp.cgBitmapContext, rect);
+                break;
+        }
+        bmp.createImageFromContext();
     }
 
     @Override
@@ -106,7 +144,6 @@ public class IosCanvas implements Canvas {
         CGContextSetFillColorWithColor(bmp.cgBitmapContext, getCGColor(color));
         CGRect rect = new CGRect(new CGPoint(0, 0), size);
         CGContextFillRect(bmp.cgBitmapContext, rect);
-//        bmp.image = UIKit.UIGraphicsGetImageFromCurrentImageContext();
         bmp.createImageFromContext();
     }
 
@@ -151,31 +188,7 @@ public class IosCanvas implements Canvas {
 //        cgBitmapContext = ((IosBitmap) bitmap).cgBitmapContext;
 //    }
 //
-//    @Override
-//    public void drawText(String string, float x, float y, Paint paint) {
 //
-//        //flip Y-axis
-//        y = this.cgBitmapContext.getHeight() - y;
-//
-//        IosPaint iosPaint = (IosPaint) paint;
-//        iosPaint.drawLine(this.cgBitmapContext, string, x, y);
-//    }
-//
-//    @Override
-//    public void drawText(String string, float x, float y, Paint fill, Paint stroke) {
-//
-//        //flip Y-axis
-//        y = this.cgBitmapContext.getHeight() - y;
-//
-//        IosPaint iosFill = (IosPaint) fill;
-//        if (stroke != null) {
-//            IosPaint iosStroke = (IosPaint) stroke;
-//            iosFill.setStrokeWidth(iosStroke.strokeWidth);
-//            iosFill.setStrokeColor(iosStroke.getColor());
-//            iosStroke.drawLine(this.cgBitmapContext, string, x, y);
-//        }
-//        iosFill.drawLine(this.cgBitmapContext, string, x, y);
-//    }
 //
 //    @Override
 //    public void drawBitmap(Bitmap bitmap, float x, float y) {
@@ -184,31 +197,12 @@ public class IosCanvas implements Canvas {
 //
 //    @Override
 //    public void drawBitmapScaled(Bitmap bitmap) {
-//        CGRect rect = new CGRect(0, 0, this.cgBitmapContext.getWidth(), this.cgBitmapContext.getHeight());
-//        this.cgBitmapContext.saveGState();
-//        this.cgBitmapContext.translateCTM(0, 0);
-//        this.cgBitmapContext.drawImage(rect, ((IosBitmap) bitmap).cgBitmapContext.toImage());
-//        this.cgBitmapContext.restoreGState();
+//
 //    }
 //
 //    @Override
 //    public void drawCircle(float x, float y, float radius, Paint paint) {
-//        CGRect rect = new CGRect(x - radius, y - radius, x + radius, y + radius);
 //
-//        switch (paint.getStyle()) {
-//            case FILL:
-//                setFillColor(this.cgBitmapContext, paint.getColor());
-//                this.cgBitmapContext.fillEllipseInRect(rect);
-//                break;
-//            case STROKE:
-//                // set Stroke properties
-//                this.cgBitmapContext.setLineWidth(((IosPaint) paint).strokeWidth);
-//                this.cgBitmapContext.setLineCap(((IosPaint) paint).getIosStrokeCap());
-//                this.cgBitmapContext.setLineJoin(((IosPaint) paint).getIosStrokeJoin());
-//                setStrokeColor(this.cgBitmapContext, (paint.getColor()));
-//                this.cgBitmapContext.strokeEllipseInRect(rect);
-//                break;
-//        }
 //    }
 //
 //    @Override
