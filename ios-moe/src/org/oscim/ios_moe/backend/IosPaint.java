@@ -18,30 +18,18 @@ package org.oscim.ios_moe.backend;
 
 import apple.corefoundation.c.CoreFoundation;
 import apple.corefoundation.enums.CFStringBuiltInEncodings;
-import apple.corefoundation.enums.CFStringEncodings;
 import apple.corefoundation.opaque.CFAttributedStringRef;
-import apple.corefoundation.opaque.CFDictionaryRef;
-import apple.corefoundation.opaque.CFMutableDictionaryRef;
 import apple.corefoundation.opaque.CFStringRef;
-import apple.coregraphics.c.CoreGraphics;
 import apple.coregraphics.enums.CGBlendMode;
 import apple.coregraphics.enums.CGLineCap;
 import apple.coregraphics.enums.CGLineJoin;
-import apple.coregraphics.opaque.CGColorSpaceRef;
 import apple.coregraphics.opaque.CGContextRef;
-import apple.coregraphics.opaque.CGFontRef;
-import apple.coregraphics.struct.CGAffineTransform;
 import apple.coretext.c.CoreText;
 import apple.coretext.opaque.CTLineRef;
-import apple.foundation.NSAttributedString;
-import apple.foundation.NSMutableDictionary;
-import apple.foundation.NSString;
 import apple.uikit.UIColor;
 import apple.uikit.UIFont;
 import apple.uikit.c.UIKit;
-import com.badlogic.gdx.utils.ObjectMap;
-import org.moe.natj.general.ptr.VoidPtr;
-import org.moe.natj.general.ptr.impl.PtrFactory;
+import org.oscim.backend.canvas.Color;
 import org.oscim.backend.canvas.Paint;
 
 import java.util.HashMap;
@@ -83,8 +71,7 @@ public class IosPaint implements Paint {
     private static final String DEFAULT_FONT_NAME_ITALIC = UIFont.italicSystemFontOfSize(1).fontDescriptor().postscriptName();
 
     private Align align;
-    //    private final NSMutableDictionary attribs = NSMutableDictionary.alloc();
-    private final ObjectMap<String, String> attribs = new ObjectMap<>();
+    FontProperties attribs = new FontProperties();
     private int cap = CGLineCap.Butt;
     private int join = CGLineJoin.Miter;
     private Style style;
@@ -113,8 +100,7 @@ public class IosPaint implements Paint {
         if (colorInt == color) return;
         this.colorInt = color;
         synchronized (attribs) {
-//            attribs.setValueForKey(UIKit.NSForegroundColorAttributeName(), String.valueOf(getUiColor(color)));
-            attribs.put(UIKit.NSForegroundColorAttributeName(), String.valueOf(getUiColor(color)));
+            attribs.setForgroundColor(getUiColor(color));
         }
         ctLineIsDirty = true;
     }
@@ -123,8 +109,7 @@ public class IosPaint implements Paint {
         if (strokeColorInt == color) return;
         this.strokeColorInt = color;
         synchronized (attribs) {
-//            attribs.setValueForKey(UIKit.NSStrokeColorAttributeName(), String.valueOf(getUiColor(color)));
-            attribs.put(UIKit.NSStrokeColorAttributeName(), String.valueOf(getUiColor(color)));
+            attribs.setStrokeColor(getUiColor(color));
         }
         ctLineIsDirty = true;
     }
@@ -216,56 +201,12 @@ public class IosPaint implements Paint {
                 !!!!!
                 NOTE: The value of NSStrokeWidthAttributeName is interpreted as a percentage of the font point size.
                 */
-                float strokeWidthPercent = -(this.strokeWidth / this.textSize * 50);
-//                attribs.setValueForKey(UIKit.NSStrokeWidthAttributeName(), String.valueOf(strokeWidthPercent));
-                attribs.put(UIKit.NSStrokeWidthAttributeName(), String.valueOf(strokeWidthPercent));
-
-
-//                NSAttributedString attributedString = NSAttributedString.alloc();
-//                attributedString.initWithStringAttributes(text, attribs);
-
-
-                CFMutableDictionaryRef attributes = CoreFoundation.CFDictionaryCreateMutable(null, 20, CoreFoundation.kCFTypeDictionaryKeyCallBacks(), CoreFoundation.kCFTypeDictionaryValueCallBacks());
-
-//                for (ObjectMap.Entry<String, String> entry : attribs) {
-//
-////                    String key = entry.key;
-////                    String value = entry.value;
-////
-//////                    VoidPtr ptr = PtrFactory.(key);
-////
-////                    NSString nsKey = NSString.stringWithString(key);
-////                    NSString nsValue = NSString.stringWithString(value);
-//
-//                    CFStringRef ref = CoreFoundation.CFStringCreateWithCString(null, entry.key, CFStringBuiltInEncodings.UTF8);
-//                    CFStringRef ref2 = CoreFoundation.CFStringCreateWithCString(null, entry.value, CFStringBuiltInEncodings.UTF8);
-//
-//
-//
-//                    CGColorSpaceRef
-//
-//                    CoreFoundation.CFDictionarySetValue(attributes, ref, ref2);
-//                    System.out.print(entry);
-//                }
-
-                UIFont uiFont=UIFont.systemFontOfSizeWeight(16, UIKit.UIFontWeightSemibold());
-                CFStringRef fontName=CoreFoundation.CFStringCreateWithCString(null, uiFont.fontName(), CFStringBuiltInEncodings.UTF8);
-
-                CGFontRef fontRef = CoreGraphics.CGFontCreateWithFontName(fontName);
-                CoreFoundation.CFDictionarySetValue(attributes, fontRef, fontRef);
+                double strokeWidthPercent = -(this.strokeWidth / this.textSize * 40);
+                attribs.setStrokeWidth(strokeWidthPercent);
 
                 CFStringRef stringRef = CoreFoundation.CFStringCreateWithCString(null, text, CFStringBuiltInEncodings.UTF8);
-                CFAttributedStringRef attributedStringRef = CoreFoundation.CFAttributedStringCreate(null, stringRef, attributes);
-
-
-                NSAttributedString test = NSAttributedString.alloc().initWithString("Test");
-
-
+                CFAttributedStringRef attributedStringRef = CoreFoundation.CFAttributedStringCreate(null, stringRef, attribs);
                 ctLine = CoreText.CTLineCreateWithAttributedString(attributedStringRef);
-
-
-//                ctLine = CTLine.create(attributedString);
-//                attributedString.dispose();
             }
             lastText = text;
             ctLineIsDirty = false;
@@ -369,9 +310,7 @@ public class IosPaint implements Paint {
 
             descent = (float) font.descender();
             fontHeight = (float) (font.descender() + font.capHeight());
-
-//            attribs.setValueForKey(UIKit.NSFontAttributeName(), font.fontDescriptor().postscriptName());
-            attribs.put(UIKit.NSFontAttributeName(), font.fontDescriptor().postscriptName());
+            attribs.setFont(font);
 
         }
     }
