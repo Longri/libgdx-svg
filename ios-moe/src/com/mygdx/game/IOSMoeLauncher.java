@@ -1,5 +1,6 @@
 package com.mygdx.game;
 
+import apple.glkit.enums.GLKViewDrawableStencilFormat;
 import com.badlogic.gdx.backends.iosmoe.IOSApplication;
 import com.badlogic.gdx.backends.iosmoe.IOSApplicationConfiguration;
 import org.moe.natj.general.Pointer;
@@ -18,6 +19,7 @@ public class IOSMoeLauncher extends IOSApplication.Delegate {
     protected IOSApplication createApplication() {
         IOSApplicationConfiguration config = new IOSApplicationConfiguration();
         config.useAccelerometer = false;
+        config.stencilFormat= GLKViewDrawableStencilFormat.Format8;
 
         IosGraphics.init();
 
